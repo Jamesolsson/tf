@@ -9,9 +9,6 @@ get('/')do
     slim(:register)
 end
 
-get('/login')do 
-
-end
 
 get('/showlogin')do
   slim(:login)
@@ -44,9 +41,18 @@ post('/users/new')do
     password_digest = BCrypt::Password.create(password)
     db = SQLite3::Database.new('db/gymi.db')
     db.execute("INSERT INTO users (username,pwdigest) VALUES (?,?)",username,password_digest)
-    redirect('/login')
+    redirect('/showlogin')
   else
     "Fel Lösenord"
   end
 end
   
+get('/exercises') do
+  db = SQLite3::Database.new("db/gymi.db")
+  db.results_as_hash = true
+  result = db.execute("SELECT * FROM exercises")
+
+  p result
+
+  slim(:"exercises/index", locals: { exercises_result: result })
+end

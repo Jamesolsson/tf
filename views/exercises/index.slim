@@ -1,0 +1,9 @@
+h1 All Exercises
+
+ol
+  - exercises_result.each do |exercise|
+    li
+      h3 Name of the exercise: #{exercise["name"]} The targed muscle grupp: #{exercise["muscle_grupp"]}
+      form(action="/add" method="post")
+        input(type="hidden" name="exercise_id" value="#{exercise["id"]}")
+        button(type="submit") Add
