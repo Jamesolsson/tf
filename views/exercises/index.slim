@@ -1,5 +1,12 @@
-h1 All Exercises
+h1 All Exercises #{session[:id]}
 
+h2 Create your own exercises 
+
+form action="/create" method="post" 
+  input type="text" name="name" placeholder ="Titel på övning"
+  input type="text" name="muscle_grupp" placeholder="vilken muscle grupp"
+  br/
+  button type="submit" Create 
 ol
   - exercises_result.each do |exercise|
     li
