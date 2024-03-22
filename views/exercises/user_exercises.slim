@@ -2,7 +2,8 @@ h1 Your Added Exercises
 
 ol 
   - user_exercises.each do |exercise|
+    p ___________________________________________
     li= "Exercise Name: #{exercise['name']}, Targeted Muscle Group: #{exercise['muscle_grupp']}"   
-    form action="/remove" method="post" 
-    input(type="hidden" name="exercise_id" value="#{exercise["id"]}")
-        button(type="submit") Remove 
+    form(action="/remove" method="post")
+        input(type="hidden" name="exercise_id" value="#{exercise["id"]}")
+        button(type="submit") Remove

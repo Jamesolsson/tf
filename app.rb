@@ -64,10 +64,8 @@ post('/add') do
 
   db = SQLite3::Database.new('db/gymi.db')
   db.execute("INSERT INTO users_exercises_rel (user_id, exercises_id) VALUES (?, ?);", user_id, exercise_id)
+  redirect('/protected/exercises')
 
-  rescue SQLite3::ConstraintException => e
- 
-  session[:error] = "Exercise already added"
 
   redirect('/protected/exercises')
 end
@@ -84,7 +82,18 @@ post("/create")do
 end
 
 
-get('/user/exercises') do
+post('/remove') do
+  exercise_id = params[:exercise_id]
+  user_id = session[:id]
+
+  db = SQLite3::Database.new('db/gymi.db')
+  db.execute("DELETE FROM users_exercises_rel WHERE user_id = ? AND exercises_id = ?", user_id, exercise_id)
+  
+  redirect('/user_exercises')
+end
+
+
+get('/user_exercises') do
   user_id = session[:id]
 
 
@@ -113,7 +122,54 @@ post('/users/new')do
 end
 
 get("/program")do 
-  slim(:"/program/index")
+
+  db = SQLite3::Database.new('db/gymi.db')
+  db.results_as_hash = true
+  program = db.execute("SELECT * FROM program")
+ 
+
+  slim(:"/program/index", locals: { program: program })
 end
+
+post("/create/program")do 
+  user_id = session[:id]
+  program_name = params[:program_name]
+  program_id = params[:program_id]
+
+  db = SQLite3::Database.new('db/gymi.db')
+  db.execute("INSERT INTO program (program_name, program_id, user_id) VALUES (?, ?, ?);", program_name, program_id, user_id)
+
+  redirect('/program/new')
+
+end
+
+post('/program/new')do 
+
+
+exercises_id = params[:exercise_id]
+sets = params[:sets]
+reps = params[:reps]
+weight = params[:weight]
+
+
+db = SQLite3::Database.new('db/gymi.db')
+program_id = db.last_insert_row_id()
+db.execute("INSERT INTO exercise_program_rel (program_id, exercises_id, sets, reps, weight) VALUES (?, ?, ?, ?, ?);", program_id, exercises_id, sets, reps, weight)
+
+redirect('/program/new')
+
+end
+
+get('/program/new') do
+
+  db = SQLite3::Database.new('db/gymi.db')
+  db.results_as_hash = true
+  @exercises = db.execute("SELECT * FROM exercises")
+
+  slim(:"program/new")
+end
+
+
+
   
 

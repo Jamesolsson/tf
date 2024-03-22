@@ -1,1 +1,14 @@
-p bajs 
+h1 create program 
+
+form action="/create/program" method="post" 
+  p make your programs here 
+  br/
+  input type="text" name="program_name" placeholder="name of program"
+  br/
+  button type="submit" Create 
+
+h1 Programs
+
+ul
+  - program.each do |program|
+    li= "Program Name: #{program['name']},"
