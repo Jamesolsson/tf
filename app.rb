@@ -83,8 +83,8 @@ end
 
 
 post('/remove') do
-  exercise_id = params[:exercise_id]
-  user_id = session[:id]
+  exercise_id = params[:exercise_id].to_i
+  user_id = session[:id].to_i
 
   db = SQLite3::Database.new('db/gymi.db')
   db.execute("DELETE FROM users_exercises_rel WHERE user_id = ? AND exercises_id = ?", user_id, exercise_id)
@@ -99,8 +99,8 @@ get('/user_exercises') do
 
   db = SQLite3::Database.new('db/gymi.db')
   db.results_as_hash = true
-  user_exercises = db.execute("SELECT exercises.name, exercises.muscle_grupp FROM exercises INNER JOIN users_exercises_rel ON exercises.id = users_exercises_rel.exercises_id WHERE users_exercises_rel.user_id = ? ORDER BY muscle_grupp ASC;", user_id)
-
+  user_exercises = db.execute("SELECT exercises.name, exercises.muscle_grupp, exercises.id FROM exercises INNER JOIN users_exercises_rel ON exercises.id = users_exercises_rel.exercises_id WHERE users_exercises_rel.user_id = ? ORDER BY muscle_grupp ASC;", user_id)
+  p "usr ex är #{user_exercises}"
   slim(:"exercises/user_exercises", locals: { user_exercises: user_exercises })
 
 end
@@ -126,40 +126,47 @@ get("/program")do
   db = SQLite3::Database.new('db/gymi.db')
   db.results_as_hash = true
   program = db.execute("SELECT * FROM program")
- 
+  
 
-  slim(:"/program/index", locals: { program: program })
+  slim(:"/program/index", locals:{ program: program })
 end
 
-post("/create/program")do 
-  user_id = session[:id]
+#rout för namn 
+post('/program/name')do 
   program_name = params[:program_name]
-  program_id = params[:program_id]
 
   db = SQLite3::Database.new('db/gymi.db')
-  db.execute("INSERT INTO program (program_name, program_id, user_id) VALUES (?, ?, ?);", program_name, program_id, user_id)
+  db.execute("INSERT INTO program (program_name) VALUES (?)", program_name)
+
+  
+  # Retrieve the last inserted program_id
+  program_id = db.last_insert_row_id
+
+  # Store the program_id in the session
+  session[:program_id] = program_id
+  
+  redirect('/program/new')
+end
+
+
+#route som lägger till weight m.m.---
+post('/program/new') do
+  exercises_id = params[:exercise_id]
+  sets = params[:sets]
+  reps = params[:reps]
+  weight = params[:weight]
+  
+  # Retrieve the program_id from the session
+  program_id = session[:program_id]
+
+  db = SQLite3::Database.new('db/gymi.db')
+  db.results_as_hash = true
+
+  db.execute("INSERT INTO exercise_program_rel (program_id, exercises_id, sets, reps, weight) VALUES (?, ?, ?, ?, ?)",
+        program_id, exercises_id, sets, reps, weight)
 
   redirect('/program/new')
-
 end
-
-post('/program/new')do 
-
-
-exercises_id = params[:exercise_id]
-sets = params[:sets]
-reps = params[:reps]
-weight = params[:weight]
-
-
-db = SQLite3::Database.new('db/gymi.db')
-program_id = db.last_insert_row_id()
-db.execute("INSERT INTO exercise_program_rel (program_id, exercises_id, sets, reps, weight) VALUES (?, ?, ?, ?, ?);", program_id, exercises_id, sets, reps, weight)
-
-redirect('/program/new')
-
-end
-
 get('/program/new') do
 
   db = SQLite3::Database.new('db/gymi.db')
@@ -170,6 +177,17 @@ get('/program/new') do
 end
 
 
-
+get("/user/index") do 
+  db = SQLite3::Database.new('db/gymi.db')
+  db.results_as_hash = true
   
-
+  # Fetch programs associated with the current user
+  user_id = session[:id]
+  programs = db.execute("SELECT program.program_id, program.program_name, exercises.name, exercises.muscle_grupp, exercise_program_rel.sets, exercise_program_rel.reps, exercise_program_rel.weight
+  FROM program
+  JOIN exercise_program_rel ON program.program_id = exercise_program_rel.program_id
+  JOIN exercises ON exercise_program_rel.exercises_id = exercises.id
+  WHERE program.user_id = ?", user_id)
+  
+  slim(:"/program/index", locals: { programs: programs })
+end

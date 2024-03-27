@@ -1,6 +1,6 @@
 h1 create program 
 
-form action="/create/program" method="post" 
+form action="/program/name" method="post" 
   p make your programs here 
   br/
   input type="text" name="program_name" placeholder="name of program"
@@ -11,4 +11,6 @@ h1 Programs
 
 ul
   - program.each do |program|
-    li= "Program Name: #{program['name']},"
+    li= "Program Name: #{program['program_name']},"
+    input type="button" value="open"/
+    input type="button" value="remove"/
