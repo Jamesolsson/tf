@@ -1,9 +1,24 @@
 h1 Your Added Exercises
 
-ol 
-  - user_exercises.each do |exercise|
-    p ___________________________________________
-    li= "Exercise Name: #{exercise['name']}, Targeted Muscle Group: #{exercise['muscle_grupp']}"   
-    form(action="/remove" method="post")
-        input type="hidden" name="exercise_id" value="#{exercise['id']}"
-        button type="submit" Remove
+form(action="/create" method="post")
+  label(for="name") Exercise Name:
+  input(type="text" name="name" id="name")
+  br
+  label(for="muscle_group") Muscle Group:
+  input(type="text" name="muscle_group" id="muscle_group")
+  br
+  input(type="hidden" name="user_id" value="#{session[:id]}") # Include the user ID in the form
+  button(type="submit") Add Exercise
+
+h1 User Exercises
+
+- if @user_exercises.any? # Check if there are any exercises
+  ol
+    - @user_exercises.each do |exercise|
+      p ___________________________________________
+      h3 Name of the exercise: #{exercise["name"]} The target muscle group: #{exercise["muscle_grupp"]}
+      form(action="/add" method="post")
+        input(type="hidden" name="exercise_id" value="#{exercise["id"]}")
+        button(type="submit") Add
+- else
+  p No exercises found.

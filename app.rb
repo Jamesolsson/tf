@@ -70,17 +70,24 @@ post('/add') do
   redirect('/protected/exercises')
 end
 
-post("/create")do
-
+post('/create') do
   name = params[:name]
-  muscle_grupp = params[:muscle_grupp]
+  muscle_group = params[:muscle_group]
+  user_id = session[:id]
 
   db = SQLite3::Database.new('db/gymi.db')
-  db.execute("INSERT INTO exercises (name, muscle_grupp) VALUES (?, ?);", name, muscle_grupp)
 
-  redirect('/protected/exercises')
+  # Insert the exercise into the exercises table
+  db.execute("INSERT INTO exercises (name, muscle_grupp) VALUES (?, ?)", name, muscle_group)
+
+  # Get the ID of the last inserted exercise
+  exercise_id = db.last_insert_row_id
+
+  # Insert the association into the users_exercises_rel table
+  db.execute("INSERT INTO users_exercises_rel (user_id, exercises_id) VALUES (?, ?)", user_id, exercises_id)
+
+  redirect('/user_exercises')
 end
-
 
 post('/remove') do
   exercise_id = params[:exercise_id].to_i
@@ -92,20 +99,21 @@ post('/remove') do
   redirect('/user_exercises')
 end
 
-
 get('/user_exercises') do
   user_id = session[:id]
-
-
+  
   db = SQLite3::Database.new('db/gymi.db')
   db.results_as_hash = true
-  user_exercises = db.execute("SELECT exercises.name, exercises.muscle_grupp, exercises.id FROM exercises INNER JOIN users_exercises_rel ON exercises.id = users_exercises_rel.exercises_id WHERE users_exercises_rel.user_id = ? ORDER BY muscle_grupp ASC;", user_id)
-  p "usr ex är #{user_exercises}"
-  slim(:"exercises/user_exercises", locals: { user_exercises: user_exercises })
-
+    
+  # Fetch exercises associated with the current user from the join of exercises and users_exercises_rel tables
+  @user_exercises = db.execute("SELECT exercises.name, exercises.muscle_grupp, exercises.id 
+  FROM exercises 
+  INNER JOIN users_exercises_rel ON exercises.id = users_exercises_rel.exercises_id 
+  WHERE users_exercises_rel.user_id = ? 
+  ORDER BY exercises.muscle_grupp ASC", user_id)
+  
+  slim(:"exercises/user_exercises", locals: { user_exercises: @user_exercises })
 end
-
-
 post('/users/new')do
   username = params[:username]
   password = params[:password]
@@ -168,12 +176,15 @@ post('/program/new') do
   redirect('/program/new')
 end
 get('/program/new') do
+  user_id = session[:id]
 
   db = SQLite3::Database.new('db/gymi.db')
   db.results_as_hash = true
-  @exercises = db.execute("SELECT * FROM exercises")
+  
+  # Fetch exercises that have no user_id or the same user_id as the session ID
+  @exercises = db.execute("SELECT id, name FROM exercises WHERE user_id IS NULL OR user_id = ?", user_id)
 
-  slim(:"program/new")
+  slim(:"program/new", locals: { exercises: @exercises })
 end
 
 

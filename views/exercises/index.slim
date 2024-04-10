@@ -1,17 +1,10 @@
 h1 All Exercises #{session[:id]}
 
-h2 Create your own exercises 
-
-form action="/create" method="post" 
-  input type="text" name="name" placeholder ="Titel på övning"
-  input type="text" name="muscle_grupp" placeholder="vilken muscle grupp"
-  br/
-  button type="submit" Create 
 ol
   - exercises_result.each do |exercise|
-    
+    - if exercise["user_id"].nil?
       p ___________________________________________
-      h3 Name of the exercise: #{exercise["name"]} The targed muscle grupp: #{exercise["muscle_grupp"]}
+      h3 Name of the exercise: #{exercise["name"]} The target muscle group: #{exercise["muscle_grupp"]}
       form(action="/add" method="post")
         input(type="hidden" name="exercise_id" value="#{exercise["id"]}")
         button(type="submit") Add
